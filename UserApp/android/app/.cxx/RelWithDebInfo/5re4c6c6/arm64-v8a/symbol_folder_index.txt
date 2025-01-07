@@ -1,0 +1,1 @@
+D:\workspace\react_native\ZIP\UserApp\android\app\build\intermediates\cxx\RelWithDebInfo\5re4c6c6\obj\arm64-v8a
