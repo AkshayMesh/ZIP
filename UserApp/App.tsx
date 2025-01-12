@@ -1,4 +1,4 @@
-import React from 'react';
+import { React } from 'react';
 import { useColorScheme } from 'react-native';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import { NavigationContainer } from '@react-navigation/native';
