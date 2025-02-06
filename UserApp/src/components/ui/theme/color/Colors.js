@@ -3,7 +3,7 @@ import { useColorScheme } from "react-native"
 // const isDarkMode = useColorScheme() === 'dark';
 const MyTheme = {
     primary: "#1977fa",
-    secondary: "#FF6347",
+    secondary: "#87458a",
     windowBackground: 'white',
     statusBarColor: 'white',
     link: '#619ffa'
