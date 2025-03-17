@@ -53,6 +53,9 @@ export default function OtpScreen({ navigation, route }) {
         <TouchableOpacity style={styles.button} onPress={() => { navigation.navigate('Profile', { number }) }}>
             <Text style={styles.button_text}>Verify</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => { navigation.navigate('Map') }}>
+            <Text style={styles.button_text}>Go To Map</Text>
+        </TouchableOpacity>
     </View>
     )
 }

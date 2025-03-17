@@ -31,21 +31,64 @@ export default function GetStarted({ navigation }) {
     };
 
     const continueClick = async () => {
-        setVisibleNotificationDialog(true);
+        // Check if we need to request notification permission (Android 13 and above)
+        if (Platform.OS === 'android' && Platform.Version >= 33) {
+            const notificationStatus = await PermissionsAndroid.check(
+                PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+            );
+            
+            if (!notificationStatus) {
+                setVisibleNotificationDialog(true);
+            } else {
+                // If notification permission is granted, check location
+                checkLocationPermission();
+            }
+        } else {
+            // For lower Android versions, directly check location
+            checkLocationPermission();
+        }
+    };
+
+    const checkLocationPermission = async () => {
+        const fineLocation = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        const coarseLocation = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION
+        );
+
+        if (!fineLocation || !coarseLocation) {
+            setVisibleLocationDialog(true);
+        } else {
+            setPerGranted(true);
+            goToNext();
+        }
     };
 
     const requestNotificationPermission = async () => {
-        const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log("Notification permission granted");
-            setVisibleNotificationDialog(false);
-            requestLocationPermission();
+        setVisibleNotificationDialog(false);
+        if (Platform.OS === 'android' && Platform.Version >= 33) {
+            try {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+                );
+                if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                    console.log("Notification permission granted");
+                    checkLocationPermission();
+                } else {
+                    Alert.alert("Permission Denied", "You need to allow notification permissions to proceed.");
+                }
+            } catch (err) {
+                console.warn(err);
+                checkLocationPermission(); // Proceed to location check even if notification permission fails
+            }
         } else {
-            Alert.alert("Permission Denied", "You need to allow notification permissions to proceed.");
+            checkLocationPermission();
         }
     };
 
     const requestLocationPermission = async () => {
+        setVisibleLocationDialog(false); // Close custom dialog
         const granted = await PermissionsAndroid.requestMultiple([
             PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
             PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
@@ -75,27 +118,27 @@ export default function GetStarted({ navigation }) {
             <TouchableOpacity onPress={openPrivacyPolicy}><Text style={styles.link_text}>Privacy Policy.</Text></TouchableOpacity>
 
             <Portal>
-                <Dialog visible={visibleNotificationDialog} onDismiss={() => setVisibleNotificationDialog(false)}>
-                    <Dialog.Title>Notification Permission</Dialog.Title>
-                    <Dialog.Content>
-                        <Text>We need your permission to send notifications.</Text>
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button onPress={() => setVisibleNotificationDialog(false)}>Cancel</Button>
-                        <Button onPress={requestNotificationPermission}>Allow</Button>
-                    </Dialog.Actions>
-                </Dialog>
+                {Platform.Version >= 33 && (
+                    <Dialog visible={visibleNotificationDialog} onDismiss={() => setVisibleNotificationDialog(false)}>
+                        <Dialog.Title>Notification Permission</Dialog.Title>
+                        <Dialog.Content>
+                            <Text>We need your permission to send notifications for important updates and alerts.</Text>
+                        </Dialog.Content>
+                        <Dialog.Actions>
+                            <Button onPress={requestNotificationPermission}>OK</Button>
+                        </Dialog.Actions>
+                    </Dialog>
+                )}
             </Portal>
 
             <Portal>
                 <Dialog visible={visibleLocationDialog} onDismiss={() => setVisibleLocationDialog(false)}>
                     <Dialog.Title>Location Permission</Dialog.Title>
                     <Dialog.Content>
-                        <Text>We need your permission to access your location.</Text>
+                        <Text>We need your location to provide you with nearby services and better experience.</Text>
                     </Dialog.Content>
                     <Dialog.Actions>
-                        <Button onPress={() => setVisibleLocationDialog(false)}>Cancel</Button>
-                        <Button onPress={requestLocationPermission}>Allow</Button>
+                        <Button onPress={requestLocationPermission}>OK</Button>
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
